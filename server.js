@@ -18,6 +18,9 @@ const db = new sqlite3.Database('./db/election.db', err => {
     console.log('Connected to the election database.');
   });
 
+
+////////////////////// CANDIDATE ROUTES /////////////////////////
+
 // Get all candidates
 app.get('/api/candidates', (req, res) => {
     const sql = `SELECT candidates.*, parties.name 
@@ -92,19 +95,99 @@ app.post('/api/candidate', ({ body }, res) => {
     const params = [body.first_name, body.last_name, body.industry_connected];
     // ES5 function, not arrow function, to use `this`
     db.run(sql, params, function(err, result) {
+      if (err) {
+          res.status(400).json({ error: err.message });
+          return;
+      }
+
+      res.json({
+          message: 'success',
+          data: body,
+          id: this.lastID
+      });
+    });
+  });
+
+
+
+////////////// PARTY ROUTES ////////////////
+
+// Route to get all parties
+app.get('/api/parties', (req, res) => {
+  const sql = `SELECT * FROM parties`;
+  const params = [];
+  db.all(sql, params, (err, rows) => {
     if (err) {
-        res.status(400).json({ error: err.message });
-        return;
+      res.status(500).json({ error: err.message });
+      return;
     }
 
     res.json({
-        message: 'success',
-        data: body,
-        id: this.lastID
+      message: 'success',
+      data: rows
     });
+  });
 });
 
+// Route to get a single party
+app.get('/api/party/:id', (req, res) => {
+  const sql = `SELECT * FROM parties WHERE id = ?`;
+  const params = [req.params.id];
+  db.get(sql, params, (err, row) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+
+    res.json({
+      message: 'success',
+      data: row
+    });
   });
+});
+
+// Route to delete a Party
+app.delete('/api/party/:id', (req, res) => {
+  const sql = `DELETE FROM parties WHERE id = ?`;
+  const params = [req.params.id];
+  db.run(sql, params, function(err, result) {
+    if (err) {
+      res.status(400).json({ error: res.message });
+      return;
+    }
+
+    res.json({ message: 'successfully deleted', changes: this.changes });
+  });
+});
+
+// Route to change a party ID
+app.put('/api/candidate/:id', (req, res) => {
+  const errors = inputCheck(req.body, 'party_id');
+
+  if (errors) {
+    res.status(400).json({ error: errors });
+    return;
+  }
+  
+  const sql = `UPDATE candidates SET party_id = ? 
+               WHERE id = ?`;
+  const params = [req.body.party_id, req.params.id];
+
+  db.run(sql, params, function(err, result) {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+
+    res.json({
+      message: 'success',
+      data: req.body,
+      changes: this.changes
+    });
+  });
+});
+
+
 
 
 
