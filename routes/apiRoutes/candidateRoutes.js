@@ -3,10 +3,10 @@ const router = express.Router();
 
 
 //const db = require('../../db/database');
-const db = require('../db/database');
+const db = require('../../db/database');
 
 //const inputCheck = require('../../utils/inputCheck');
-const inputCheck = require('../utils/inputCheck');
+const inputCheck = require('../../utils/inputCheck');
 
 ////////////////////// CANDIDATE ROUTES /////////////////////////
 
